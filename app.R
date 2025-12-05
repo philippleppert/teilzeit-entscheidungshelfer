@@ -21,7 +21,7 @@ ui <- fluidPage(
       selectInput("bland", "Bundesland des Arbeitgebers auswählen", choices = unname(mapping_bland))
       )
     ),
-  column(12, column(6, DTOutput("table1")),  column(6, DTOutput("table2")))
+  column(12, column(6, DTOutput("table1"), htmlOutput("text")),  column(6, DTOutput("table2")))
   ))
 
 server <- function(input, output, session) {
@@ -84,6 +84,43 @@ server <- function(input, output, session) {
     
   })
   
+  output$text <- renderText({
+    count_thursday <-
+      rvals$holiday_data %>%
+      filter(!!sym(names(keep(mapping_bland,~.x==input$bland))) == 1) %>%
+      filter(!(weekday %in% c("Samstag", "Sonntag"))) %>% 
+      arrange(date) %>%
+      mutate(
+        diff_date = date - lag(date),
+        diff_date2 = if_else(diff_date != 1, lead(diff_date), NA)
+      ) %>%
+      filter((diff_date != 1 & diff_date2 != 1) | is.na(diff_date)) %>%
+      filter(weekday == "Donnerstag") %>%
+      summarise(count = n()) 
+    
+    count_tuesday <-
+      rvals$holiday_data %>%
+      filter(!!sym(names(keep(mapping_bland,~.x==input$bland))) == 1) %>%
+      filter(!(weekday %in% c("Samstag", "Sonntag"))) %>% 
+      arrange(date) %>%
+      mutate(
+        diff_date = date - lag(date),
+        diff_date2 = if_else(diff_date != 1, lead(diff_date), NA)
+      ) %>%
+      filter((diff_date != 1 & diff_date2 != 1) | is.na(diff_date)) %>%
+      filter(weekday == "Dienstag") %>%
+      summarise(count = n())
+    
+    fails <-
+      rvals$holiday_data %>%
+      filter(!!sym(names(keep(mapping_bland,~.x==input$bland))) == 1) %>%
+      filter((weekday %in% c("Samstag", "Sonntag"))) %>%
+      summarise(count = n()) 
+    
+    str_c("Davon ", count_thursday$count, " Donnerstage ohne darauffolgenden Freitag, welcher ein Feiertag ist.
+          <br>Davon ", count_tuesday$count, " Dienstage ohne vorhergenden Montag, welcher ein Feiertag ist.
+          <br>Davon ", fails$count, " Feiertage, die auf einen Samstag oder Sonntag fallen :-(")
+  })
 }
 
 shinyApp(ui, server)

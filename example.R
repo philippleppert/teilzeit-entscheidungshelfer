@@ -51,3 +51,35 @@ y %>%
   ungroup() %>%
   pivot_wider(names_from = weekday, values_from = n) %>%
   select(Feiertag = holiday, all_of(c(seq_weekdays)))
+
+count_thursday <-
+  y %>%
+  filter(be == 1) %>%
+  filter(!(weekday %in% c("Samstag", "Sonntag"))) %>% 
+  arrange(date) %>%
+  mutate(
+    diff_date = date - lag(date),
+    diff_date2 = if_else(diff_date != 1, lead(diff_date), NA)
+  ) %>%
+  filter((diff_date != 1 & diff_date2 != 1) | is.na(diff_date)) %>%
+  filter(weekday == "Donnerstag") %>%
+  summarise(count = n()) 
+ 
+count_tuesday <-
+  y %>%
+  filter(be == 1) %>%
+  filter(!(weekday %in% c("Samstag", "Sonntag"))) %>% 
+  arrange(date) %>%
+  mutate(
+    diff_date = date - lag(date),
+    diff_date2 = if_else(diff_date != 1, lead(diff_date), NA)
+  ) %>%
+  filter((diff_date != 1 & diff_date2 != 1) | is.na(diff_date)) %>%
+  filter(weekday == "Dienstag") %>%
+  summarise(count = n()) 
+
+fails <-
+  y %>%
+  filter(be == 1) %>%
+  filter((weekday %in% c("Samstag", "Sonntag"))) %>%
+  summarise(count = n()) 
