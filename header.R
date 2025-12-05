@@ -5,16 +5,7 @@ library(timeDate)
 library(shiny)
 library(DT)
 
-req <- GET("https://get.api-feiertage.de/")
-
-data_req <- content(req, as = "text") %>% fromJSON()
-
-data_processed <- 
-  tibble(data_req$feiertage) %>%
-  mutate(
-    date = ymd(date),
-    weekday = weekdays(date)
-  )
+data_processed <- read_rds("api_data.rds")
 
 mapping_bland <-
   c(

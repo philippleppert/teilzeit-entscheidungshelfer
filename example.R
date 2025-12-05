@@ -14,6 +14,7 @@ data_processed <-
     weekday = weekdays(date)
   )
 
+saveRDS(data_processed, "api_data.rds")
 years <- 2026:2057
 
 
